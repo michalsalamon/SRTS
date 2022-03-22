@@ -18,6 +18,10 @@ public class MapGenerator : MonoBehaviour
 
     private List<Coord> allMapTileCoords;
     private Transform[,] mapTiles;
+    public Transform[,] MapTiles
+    {
+        get { return mapTiles; }
+    }
 
     public Transform[,] unitPositions;
 

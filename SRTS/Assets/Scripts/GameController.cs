@@ -9,7 +9,13 @@ public class GameController : MonoBehaviour
     private Camera viewCamera;
 
     private Vector3 point;
-    private bool mouseKey0 = false;
+    private bool mouseKey0Down = false;
+    private bool mouseKey0Hold = false;
+    private bool mouseKey0UP = false;
+    private Vector3 mouseStartHoldPoint;
+
+    private List<Transform> dragSelectTiles = new List<Transform>();
+    private List<Color> dragSelectTilesOriginalColor = new List<Color>();
 
     Color orginalTileColor = Color.white;
     Transform previousTilePoint;
@@ -25,7 +31,8 @@ public class GameController : MonoBehaviour
     void Update()
     {
         //get mouse keys
-        mouseKey0 = Input.GetButtonDown("Fire1");
+        mouseKey0Down = Input.GetButtonDown("Fire1");
+        mouseKey0Hold = Input.GetButton("Fire1");
 
         //get mouse point
         Ray ray = viewCamera.ScreenPointToRay(Input.mousePosition);
@@ -37,16 +44,22 @@ public class GameController : MonoBehaviour
             Debug.DrawLine(ray.origin, point, Color.red);
         }
 
-        HighLightPointedTile();
-        if (mouseKey0)
+        HighLightTile();
+
+        if (mouseKey0Down)
         {
             OnClickMouse0();
-            ManageMouse0Click();
+            mouseStartHoldPoint = point;
+        }
+
+        if (mouseKey0Hold)
+        {
+            ManageDragSelecting();
         }
 
     }
     
-    private void HighLightPointedTile()
+    private void HighLightTile()
     {
         //get pointed tile
         Transform tilePointing = map.PositionToTile(point);
@@ -61,6 +74,28 @@ public class GameController : MonoBehaviour
             tilePointing.GetComponent<Renderer>().material.color = hightLightedTileColor;
             previousTilePoint = tilePointing;
         }       
+    }
+
+    private void ManageDragSelecting()
+    {
+        dragSelectTiles.Clear();
+        dragSelectTilesOriginalColor.Clear();
+
+        int start_x = map.PositionToCoord(mouseStartHoldPoint).x;
+        int start_y = map.PositionToCoord(mouseStartHoldPoint).y;
+        int current_x = map.PositionToCoord(point).x;
+        int current_y = map.PositionToCoord(point).y;
+
+        for (int x = start_x; x <= current_x; x++)
+        {
+            for (int y = start_y; y <= current_y; y++)
+            {
+                dragSelectTiles.Add(map.MapTiles[x, y]);
+                Material tileMat = map.MapTiles[x, y].GetComponent<Renderer>().material;
+                dragSelectTilesOriginalColor.Add(tileMat.color);
+                tileMat.color = hightLightedTileColor;
+            }
+        }
     }
 
     private void ManageMouse0Click()
