@@ -18,9 +18,10 @@ public class MapGenerator : MonoBehaviour
 
     private List<Coord> allMapTileCoords;
     private Transform[,] mapTiles;
-    public Transform[,] MapTiles
+    private Transform[,] selectTiles;
+    public Transform[,] SelectTiles
     {
-        get { return mapTiles; }
+        get { return selectTiles; }
     }
 
     public Transform[,] unitPositions;
@@ -34,6 +35,7 @@ public class MapGenerator : MonoBehaviour
     {
         allMapTileCoords = new List<Coord>();
         mapTiles = new Transform[mapSize.x, mapSize.y];
+        selectTiles = new Transform[mapSize.x, mapSize.y];
         unitPositions = new Transform[MapSize.x, MapSize.y];
 
         //box collider for map floor
@@ -68,6 +70,21 @@ public class MapGenerator : MonoBehaviour
                 newTile.localScale = Vector3.one * (1 - outlinePercent) * tileSize;
                 newTile.transform.parent = mapHolder;
                 mapTiles[x, y] = newTile;
+            }
+        }
+
+        //spawn select tiles
+        for (int x = 0; x < mapSize.x; x++)
+        {
+            for (int y = 0; y < mapSize.y; y++)
+            {
+                Vector3 tilePos = CoordToPosition(x, y);
+                Transform newTile = Instantiate(baseTilePrefab, tilePos, Quaternion.Euler(Vector3.right * 90));
+                newTile.localScale = Vector3.one * tileSize;
+                newTile.position -= Vector3.up * 0.01f;
+                newTile.GetComponent<Renderer>().material.color = Color.black;
+                newTile.transform.parent = mapHolder;
+                selectTiles[x, y] = newTile;
             }
         }
     }
