@@ -12,9 +12,13 @@ public class GameController : MonoBehaviour
     private bool mouseKey0Down = false;
     private bool mouseKey0Hold = false;
     private bool mouseKey0UP = false;
+    private bool mouseKey1Down = false;
+
     private Vector3 mouseStartHoldPoint;
 
     private List<Transform> dragSelectTiles = new List<Transform>();
+
+    private List<Transform> selectedUnits = new List<Transform>();
 
     Color orginalTileColor = Color.black;
     Transform previousTilePoint;
@@ -34,6 +38,8 @@ public class GameController : MonoBehaviour
         mouseKey0Hold = Input.GetButton("Fire1");
         mouseKey0UP = Input.GetButtonUp("Fire1");
 
+        mouseKey1Down = Input.GetButtonDown("Fire2");
+
         //get mouse point
         Ray ray = viewCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -47,7 +53,6 @@ public class GameController : MonoBehaviour
 
         if (mouseKey0Down)
         {
-            OnClickMouse0();
             mouseStartHoldPoint = point;
         }
 
@@ -57,6 +62,10 @@ public class GameController : MonoBehaviour
         }
         if (mouseKey0UP)
         {
+            //deselect units
+            OnMouse0Up();
+            //select units on highlighted area
+            SelectUnits();
             ClearTileSelection();
         }
         if (!mouseKey0Hold)
@@ -66,6 +75,11 @@ public class GameController : MonoBehaviour
                 previousTilePoint.GetComponent<Renderer>().material.color = orginalTileColor;
             }
             previousTilePoint = HighLightTile(point);
+        }
+
+        if (mouseKey1Down)
+        {
+            OnMouse1Down();
         }
     }
 
@@ -81,6 +95,8 @@ public class GameController : MonoBehaviour
     {
         //hightlighting tiles
         ClearTileSelection();
+        //clear unit list
+        selectedUnits.Clear();
         int start_x = map.PositionToCoord(mouseStartHoldPoint).x;
         int start_y = map.PositionToCoord(mouseStartHoldPoint).y;
         int current_x = map.PositionToCoord(point).x;
@@ -105,10 +121,23 @@ public class GameController : MonoBehaviour
         {
             for (int y = start_y; y <= current_y; y++)
             {
+                //highlighting tiles on drag area   
                 dragSelectTiles.Add(map.SelectTiles[x, y]);
-                Material tileMat = map.SelectTiles[x, y].GetComponent<Renderer>().material;
-                tileMat.color = hightLightedTileColor;
+                map.SelectTiles[x, y].GetComponent<Renderer>().material.color = hightLightedTileColor;
+                //check if there are units on coords and make list of them
+                if (map.UnitPositions[x, y])
+                {
+                    selectedUnits.Add(map.UnitPositions[x, y]);
+                }
             }
+        }
+    }
+
+    private void SelectUnits()
+    {
+        for (int i = 0; i < selectedUnits.Count; i ++)
+        {
+            selectedUnits[i].GetComponent<BaseUnit>().SelectUnit();
         }
     }
 
@@ -119,19 +148,8 @@ public class GameController : MonoBehaviour
             dragSelectTiles[i].GetComponent<Renderer>().material.color = orginalTileColor;
         }
         dragSelectTiles.Clear();
-    }    
-
-    private void ManageMouse0Click()
-    {
-        //if unit is on the tile
-        if (map.CheckIfUnitIsOnCoord(point))
-        {
-            Debug.Log("Unit is on this tile");
-            Transform unit = map.CheckIfUnitIsOnCoord(point);
-            unit.GetComponent<BaseUnit>().isSelected = true;
-
-        }
     }
 
-    public event System.Action OnClickMouse0;
+    public event System.Action OnMouse0Up;
+    public event System.Action OnMouse1Down;
 }

@@ -24,7 +24,12 @@ public class MapGenerator : MonoBehaviour
         get { return selectTiles; }
     }
 
-    public Transform[,] unitPositions;
+    private Transform[,] unitPositions;
+    public Transform[,] UnitPositions
+    {
+        get { return unitPositions; }
+    }
+
 
     private void Awake()
     {
