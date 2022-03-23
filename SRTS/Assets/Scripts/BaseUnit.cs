@@ -4,8 +4,9 @@ using UnityEngine;
 
 public abstract class BaseUnit : MonoBehaviour
 {
-    private MapGenerator map;
-    protected GameController gameController;
+    protected MapGenerator map;
+    protected SelectionManager selecttionManager;
+    protected GameManager gameManager;
     [SerializeField] private GameObject selectionMarker;
 
     public int owner;
@@ -13,13 +14,16 @@ public abstract class BaseUnit : MonoBehaviour
 
     private void Start()
     {
-        selectionMarker.SetActive(false);
         map = FindObjectOfType<MapGenerator>();
-        gameController = FindObjectOfType<GameController>();
+        gameManager = FindObjectOfType<GameManager>();
+        selecttionManager = FindObjectOfType<SelectionManager>();
+
         map.UpdateUnitPosition(transform);
 
-        gameController.OnMouse0Up += DeselectUnit;
-        gameController.OnMouse1Down += OrderManage;
+        selectionMarker.SetActive(false);
+
+        selecttionManager.OnMouse0UpEvent += DeselectUnit;
+        gameManager.OnMouse1DownEvent += OrderManage;
 
         GetToGrid();
     }
@@ -43,6 +47,6 @@ public abstract class BaseUnit : MonoBehaviour
 
     public virtual void OrderManage()
     {
-        //Debug.Log("Order Click");
+
     }
 }

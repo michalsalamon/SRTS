@@ -7,29 +7,24 @@ using UnityEngine;
 public class MapGenerator : MonoBehaviour
 {
     [SerializeField] private Coord mapSize;
-    public Coord MapSize
-    {
-        get { return mapSize; }
-    }
+    public Coord MapSize { get { return mapSize; } }
     [SerializeField] private Transform baseTilePrefab;
+    private Color selectTileOriginalColor = Color.black;
+    public Color SelectTileOriginalColor { get { return selectTileOriginalColor; } }
+
 
     [SerializeField] private float tileSize = 1;
     [Range(0, 1)] [SerializeField] private float outlinePercent = 0.1f;
 
     private List<Coord> allMapTileCoords;
     private Transform[,] mapTiles;
-    private Transform[,] selectTiles;
-    public Transform[,] SelectTiles
-    {
-        get { return selectTiles; }
-    }
+    public Transform[,] MapTiles { get { return mapTiles; } }
 
     private Transform[,] unitPositions;
     public Transform[,] UnitPositions
     {
         get { return unitPositions; }
     }
-
 
     private void Awake()
     {
@@ -40,7 +35,6 @@ public class MapGenerator : MonoBehaviour
     {
         allMapTileCoords = new List<Coord>();
         mapTiles = new Transform[mapSize.x, mapSize.y];
-        selectTiles = new Transform[mapSize.x, mapSize.y];
         unitPositions = new Transform[MapSize.x, MapSize.y];
 
         //box collider for map floor
@@ -72,24 +66,10 @@ public class MapGenerator : MonoBehaviour
             {
                 Vector3 tilePos = CoordToPosition(x, y);
                 Transform newTile = Instantiate(baseTilePrefab, tilePos, Quaternion.Euler(Vector3.right * 90));
-                newTile.localScale = Vector3.one * (1 - outlinePercent) * tileSize;
+                newTile.localScale = Vector3.one * tileSize;
+                newTile.Find("Terrain Tile").localScale *= (1 - outlinePercent);
                 newTile.transform.parent = mapHolder;
                 mapTiles[x, y] = newTile;
-            }
-        }
-
-        //spawn select tiles
-        for (int x = 0; x < mapSize.x; x++)
-        {
-            for (int y = 0; y < mapSize.y; y++)
-            {
-                Vector3 tilePos = CoordToPosition(x, y);
-                Transform newTile = Instantiate(baseTilePrefab, tilePos, Quaternion.Euler(Vector3.right * 90));
-                newTile.localScale = Vector3.one * tileSize;
-                newTile.position -= Vector3.up * 0.01f;
-                newTile.GetComponent<Renderer>().material.color = Color.black;
-                newTile.transform.parent = mapHolder;
-                selectTiles[x, y] = newTile;
             }
         }
     }
@@ -114,6 +94,11 @@ public class MapGenerator : MonoBehaviour
         return new Coord(x, y);
     }
 
+    public void ChangeSelectTileColor(Coord coord, Color color)
+    {
+        mapTiles[coord.x, coord.y].Find("Selection Tile").GetComponent<Renderer>().material.color = color;
+    }
+
     public void UpdateUnitPosition(Transform unit)
     {
         Coord XY;
@@ -122,7 +107,7 @@ public class MapGenerator : MonoBehaviour
         unitPositions[XY.x, XY.y] = unit;
     }
 
-    public void UpdateUnitPosition(Transform unit, Vector3 previousPosition)
+    public void UpdateUnitPosition(Transform unit, Vector3 newPosition, Vector3 previousPosition)
     {
         Coord XY;
         if (previousPosition != null)
@@ -132,14 +117,18 @@ public class MapGenerator : MonoBehaviour
             unitPositions[XY.x, XY.y] = null;
         }
         //save new position of unit
-        XY = PositionToCoord(unit.position);
+        XY = PositionToCoord(newPosition);
         unitPositions[XY.x, XY.y] = unit;
     }
 
-    public Transform CheckIfUnitIsOnCoord(Vector3 f_position)
+    public Transform CheckIfUnitIsOnCoord(Coord coord)
     {
-        Coord XY = PositionToCoord(f_position);
-        return unitPositions[XY.x, XY.y];
+        return unitPositions[coord.x, coord.y];
+    }
+
+    public Transform GetNextTileInDirection(Vector3 pos, Vector3 directon)
+    {
+        return PositionToTile(pos + directon.normalized * tileSize);
     }
 
     [System.Serializable]
